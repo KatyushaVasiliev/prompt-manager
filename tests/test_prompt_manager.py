@@ -3,8 +3,9 @@
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
+from unittest.mock import patch
 
-from prompt_manager import Prompt, create_default_prompts, favorite_message, find_prompt, get_categories, show_prompts
+from prompt_manager import Prompt, create_default_prompts, favorite_message, find_prompt, get_categories, show_detail, show_prompts
 
 
 class DefaultPromptTests(unittest.TestCase):
@@ -30,6 +31,12 @@ class DefaultPromptTests(unittest.TestCase):
         with redirect_stdout(output):
             show_prompts([Prompt(9, "테스트", "테스트", "내용", favorite=True)])
         self.assertIn("★", output.getvalue())
+
+    def test_detail_output_contains_content(self):
+        output = StringIO()
+        with patch("builtins.input", return_value="1"), redirect_stdout(output):
+            show_detail(create_default_prompts())
+        self.assertIn("주간 학습 계획", output.getvalue())
 
 
 if __name__ == "__main__":
