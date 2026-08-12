@@ -49,6 +49,12 @@ def print_prompt_summary(prompt: Prompt) -> None:
     print(f"[{prompt.id}] {mark} {prompt.title} | {prompt.category}")
 
 
+def favorite_message(prompt: Prompt) -> str:
+    """Build consistent feedback after changing a favorite."""
+    state = "등록" if prompt.favorite else "해제"
+    return f"'{prompt.title}' 즐겨찾기가 {state}되었습니다."
+
+
 def show_prompts(prompts: List[Prompt], heading: str = "프롬포트 목록") -> None:
     """Show a list, including a friendly empty state."""
     print(f"\n--- {heading} ---")
@@ -123,8 +129,7 @@ def toggle_favorite(prompts: List[Prompt]) -> None:
         print("해당 번호의 프롬포트를 찾을 수 없습니다.")
         return
     prompt.favorite = not prompt.favorite
-    state = "등록" if prompt.favorite else "해제"
-    print(f"'{prompt.title}' 즐겨찾기가 {state}되었습니다.")
+    print(favorite_message(prompt))
 
 
 def show_menu() -> None:

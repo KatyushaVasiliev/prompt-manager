@@ -2,7 +2,7 @@
 
 import unittest
 
-from prompt_manager import create_default_prompts, find_prompt, get_categories
+from prompt_manager import Prompt, create_default_prompts, favorite_message, find_prompt, get_categories
 
 
 class DefaultPromptTests(unittest.TestCase):
@@ -18,6 +18,10 @@ class DefaultPromptTests(unittest.TestCase):
 
     def test_categories_are_unique(self):
         self.assertEqual(["교육", "업무", "여행"], get_categories(create_default_prompts()))
+
+    def test_favorite_message_reflects_state(self):
+        prompt = Prompt(9, "테스트", "테스트", "내용", favorite=True)
+        self.assertIn("등록", favorite_message(prompt))
 
 
 if __name__ == "__main__":
