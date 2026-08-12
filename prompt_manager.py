@@ -38,6 +38,11 @@ def find_prompt(prompts: Iterable[Prompt], prompt_id: int) -> Optional[Prompt]:
     return next((prompt for prompt in prompts if prompt.id == prompt_id), None)
 
 
+def get_categories(prompts: Iterable[Prompt]) -> List[str]:
+    """Return unique categories in their first-seen order."""
+    return list(dict.fromkeys(prompt.category for prompt in prompts))
+
+
 def print_prompt_summary(prompt: Prompt) -> None:
     """Print one prompt in list format."""
     mark = "★" if prompt.favorite else " "
@@ -67,6 +72,7 @@ def add_prompt(prompts: List[Prompt]) -> None:
 
 def show_by_category(prompts: List[Prompt]) -> None:
     """Show prompts that belong to a category."""
+    print("사용 가능한 카테고리: " + ", ".join(get_categories(prompts)))
     category = input_required("조회할 카테고리: ")
     matches = [prompt for prompt in prompts if prompt.category.casefold() == category.casefold()]
     show_prompts(matches, f"'{category}' 카테고리")

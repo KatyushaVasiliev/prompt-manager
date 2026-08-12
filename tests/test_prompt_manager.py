@@ -2,7 +2,7 @@
 
 import unittest
 
-from prompt_manager import create_default_prompts, find_prompt
+from prompt_manager import create_default_prompts, find_prompt, get_categories
 
 
 class DefaultPromptTests(unittest.TestCase):
@@ -15,6 +15,9 @@ class DefaultPromptTests(unittest.TestCase):
         prompt = find_prompt(create_default_prompts(), 2)
         self.assertIsNotNone(prompt)
         self.assertEqual("회의록 요약", prompt.title)
+
+    def test_categories_are_unique(self):
+        self.assertEqual(["교육", "업무", "여행"], get_categories(create_default_prompts()))
 
 
 if __name__ == "__main__":
