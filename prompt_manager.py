@@ -1,62 +1,77 @@
-"""Terminal based prompt manager."""
+"""리스트와 딕셔너리로 만든 터미널 프롬포트 관리 프로그램."""
 
-from dataclasses import dataclass
-from typing import Iterable, List, Optional
+from typing import Dict, List, Optional
 
-
-@dataclass
-class Prompt:
-    """A saved reusable prompt."""
-
-    id: int
-    title: str
-    category: str
-    content: str
-    favorite: bool = False
+CATEGORIES = ["텍스트 생성", "이미지 생성", "영상 생성", "페르소나", "자동화", "기타"]
+Prompt = Dict[str, object]
 
 
 def create_default_prompts() -> List[Prompt]:
-    """Return starter prompts from the previous prompt-writing mission."""
+    """이전 미션의 예시 프롬포트 3개를 리스트에 담아 반환한다."""
     return [
-        Prompt(1, "학습 계획 만들기", "교육", "당신은 학습 코치입니다. 목표와 기간을 바탕으로 주간 학습 계획을 만들어 주세요."),
-        Prompt(2, "회의록 요약", "업무", "당신은 업무 비서입니다. 다음 회의록을 핵심 결정 사항, 할 일, 담당자로 나누어 요약해 주세요."),
-        Prompt(3, "여행 일정 추천", "여행", "당신은 여행 플래너입니다. 예산과 선호를 고려해 하루 단위 여행 일정을 제안해 주세요."),
+        {"id": 1, "title": "블로그 글 작성", "content": "당신은 전문 블로거입니다. 주어진 주제를 친절한 블로그 글로 작성해 주세요.", "category": "텍스트 생성", "favorite": False},
+        {"id": 2, "title": "이미지 프롬프트 만들기", "content": "당신은 이미지 프롬프트 전문가입니다. 주제에 맞는 상세한 이미지 생성 프롬프트를 작성해 주세요.", "category": "이미지 생성", "favorite": False},
+        {"id": 3, "title": "학습 코치 페르소나", "content": "당신은 친절한 학습 코치입니다. 목표와 기간을 바탕으로 주간 학습 계획을 제안해 주세요.", "category": "페르소나", "favorite": False},
     ]
 
 
 def input_required(label: str) -> str:
-    """Read a non-empty value from the user."""
+    """빈 값이면 다시 입력받는다."""
     while True:
         value = input(label).strip()
         if value:
             return value
-        print("비어 있을 수 없습니다. 다시 입력해 주세요.")
+        print("입력값이 비어 있습니다. 다시 입력해 주세요.")
 
 
-def find_prompt(prompts: Iterable[Prompt], prompt_id: int) -> Optional[Prompt]:
-    """Find a prompt by its id."""
-    return next((prompt for prompt in prompts if prompt.id == prompt_id), None)
+def get_categories(prompts: List[Prompt]) -> List[str]:
+    """기본 카테고리와 사용자가 직접 입력한 카테고리를 함께 반환한다."""
+    categories = list(CATEGORIES)
+    for prompt in prompts:
+        category = str(prompt["category"])
+        if category not in categories:
+            categories.append(category)
+    return categories
 
 
-def get_categories(prompts: Iterable[Prompt]) -> List[str]:
-    """Return unique categories in their first-seen order."""
-    return list(dict.fromkeys(prompt.category for prompt in prompts))
+def choose_category(prompts: List[Prompt]) -> str:
+    """번호 선택 또는 직접 입력으로 카테고리를 받는다."""
+    categories = get_categories(prompts)
+    print("\n카테고리 목록")
+    for index, category in enumerate(categories, start=1):
+        print(f"{index}. {category}")
+    print("0. 직접 입력")
+    while True:
+        choice = input("카테고리 번호: ").strip()
+        if choice == "0":
+            return input_required("직접 입력할 카테고리: ")
+        if choice.isdigit() and 1 <= int(choice) <= len(categories):
+            return categories[int(choice) - 1]
+        print("올바른 카테고리 번호를 입력해 주세요.")
+
+
+def find_prompt(prompts: List[Prompt], prompt_id: int) -> Optional[Prompt]:
+    """번호에 해당하는 딕셔너리를 찾는다."""
+    return next((prompt for prompt in prompts if prompt["id"] == prompt_id), None)
+
+
+def read_prompt_id() -> Optional[int]:
+    """프롬포트 번호를 안전하게 입력받는다."""
+    try:
+        return int(input("프롬포트 번호: ").strip())
+    except ValueError:
+        print("번호는 정수로 입력해 주세요.")
+        return None
 
 
 def print_prompt_summary(prompt: Prompt) -> None:
-    """Print one prompt in list format."""
-    mark = "★" if prompt.favorite else " "
-    print(f"[{prompt.id}] {mark} {prompt.title} | {prompt.category}")
+    """제목·카테고리·즐겨찾기 여부를 한 줄로 출력한다."""
+    favorite = "★ 즐겨찾기" if prompt["favorite"] else "☆ 일반"
+    print(f"[{prompt['id']}] {prompt['title']} | {prompt['category']} | {favorite}")
 
 
-def favorite_message(prompt: Prompt) -> str:
-    """Build consistent feedback after changing a favorite."""
-    state = "등록" if prompt.favorite else "해제"
-    return f"'{prompt.title}' 즐겨찾기가 {state}되었습니다."
-
-
-def show_prompts(prompts: List[Prompt], heading: str = "프롬포트 목록") -> None:
-    """Show a list, including a friendly empty state."""
+def show_list(prompts: List[Prompt], heading: str = "프롬포트 목록") -> None:
+    """프롬포트 목록 또는 빈 목록 안내를 출력한다."""
     print(f"\n--- {heading} ---")
     if not prompts:
         print("표시할 프롬포트가 없습니다.")
@@ -66,96 +81,69 @@ def show_prompts(prompts: List[Prompt], heading: str = "프롬포트 목록") ->
 
 
 def add_prompt(prompts: List[Prompt]) -> None:
-    """Add a new prompt for the current program session."""
+    """제목, 내용, 카테고리를 받아 새 딕셔너리를 리스트에 추가한다."""
     print("\n--- 프롬포트 추가 ---")
     title = input_required("제목: ")
-    category = input_required("카테고리: ")
     content = input_required("내용: ")
-    next_id = max((prompt.id for prompt in prompts), default=0) + 1
-    prompts.append(Prompt(next_id, title, category, content))
+    category = choose_category(prompts)
+    next_id = max((int(prompt["id"]) for prompt in prompts), default=0) + 1
+    prompts.append({"id": next_id, "title": title, "content": content, "category": category, "favorite": False})
     print(f"'{title}' 프롬포트가 추가되었습니다.")
 
 
 def show_by_category(prompts: List[Prompt]) -> None:
-    """Show prompts that belong to a category."""
-    print("사용 가능한 카테고리: " + ", ".join(get_categories(prompts)))
-    category = input_required("조회할 카테고리: ")
-    matches = [prompt for prompt in prompts if prompt.category.casefold() == category.casefold()]
-    show_prompts(matches, f"'{category}' 카테고리")
+    """선택한 카테고리의 프롬포트만 출력한다."""
+    category = choose_category(prompts)
+    matches = [prompt for prompt in prompts if str(prompt["category"]).casefold() == category.casefold()]
+    show_list(matches, f"'{category}' 카테고리")
 
 
 def search_prompts(prompts: List[Prompt]) -> None:
-    """Search titles, categories, and contents by a keyword."""
+    """제목 또는 내용에 키워드가 있는 프롬포트를 검색한다."""
     keyword = input_required("검색어: ").casefold()
-    matches = [
-        prompt for prompt in prompts
-        if keyword in prompt.title.casefold()
-        or keyword in prompt.category.casefold()
-        or keyword in prompt.content.casefold()
-    ]
-    show_prompts(matches, f"'{keyword}' 검색 결과")
+    matches = [prompt for prompt in prompts if keyword in str(prompt["title"]).casefold() or keyword in str(prompt["content"]).casefold()]
+    show_list(matches, f"'{keyword}' 검색 결과")
 
 
 def show_detail(prompts: List[Prompt]) -> None:
-    """Show all fields for one prompt."""
+    """번호로 선택한 프롬포트의 전체 정보를 출력한다."""
     prompt_id = read_prompt_id()
-    if prompt_id is None:
-        return
-    prompt = find_prompt(prompts, prompt_id)
+    prompt = find_prompt(prompts, prompt_id) if prompt_id is not None else None
     if prompt is None:
         print("해당 번호의 프롬포트를 찾을 수 없습니다.")
         return
     print("\n--- 프롬포트 상세 ---")
-    print(f"번호: {prompt.id}\n제목: {prompt.title}\n카테고리: {prompt.category}")
-    print(f"즐겨찾기: {'예' if prompt.favorite else '아니오'}\n내용: {prompt.content}")
-
-
-def read_prompt_id() -> Optional[int]:
-    """Safely read an integer prompt id."""
-    try:
-        return int(input("프롬포트 번호: ").strip())
-    except ValueError:
-        print("번호는 정수로 입력해 주세요.")
-        return None
+    print(f"번호: {prompt['id']}\n제목: {prompt['title']}\n카테고리: {prompt['category']}")
+    print(f"즐겨찾기: {'예' if prompt['favorite'] else '아니오'}\n내용: {prompt['content']}")
 
 
 def toggle_favorite(prompts: List[Prompt]) -> None:
-    """Toggle favorite state for a prompt."""
+    """번호로 선택한 프롬포트의 즐겨찾기를 등록 또는 해제한다."""
     prompt_id = read_prompt_id()
-    if prompt_id is None:
-        return
-    prompt = find_prompt(prompts, prompt_id)
+    prompt = find_prompt(prompts, prompt_id) if prompt_id is not None else None
     if prompt is None:
         print("해당 번호의 프롬포트를 찾을 수 없습니다.")
         return
-    prompt.favorite = not prompt.favorite
-    print(favorite_message(prompt))
+    prompt["favorite"] = not bool(prompt["favorite"])
+    state = "등록" if prompt["favorite"] else "해제"
+    print(f"'{prompt['title']}' 즐겨찾기가 {state}되었습니다.")
 
 
 def show_menu() -> None:
-    """Print the main selection menu."""
+    """메인 메뉴를 출력한다."""
     print("\n========== 프롬포트 관리 프로그램 ==========")
-    print("1. 프롬포트 추가")
-    print("2. 전체 목록 보기")
-    print("3. 카테고리별 조회")
-    print("4. 검색")
-    print("5. 상세 보기")
-    print("6. 즐겨찾기 등록/해제")
-    print("7. 즐겨찾기 목록")
-    print("0. 종료")
+    print("1. 프롬포트 추가\n2. 전체 목록 보기\n3. 카테고리별 조회\n4. 검색")
+    print("5. 상세 보기\n6. 즐겨찾기 등록/해제\n7. 즐겨찾기 목록\n0. 종료")
 
 
 def run() -> None:
-    """Run the interactive application until the user exits."""
+    """기능 실행 뒤 항상 메뉴로 돌아오는 메인 반복문이다."""
     prompts = create_default_prompts()
     actions = {
-        "1": lambda: add_prompt(prompts),
-        "2": lambda: show_prompts(prompts),
-        "3": lambda: show_by_category(prompts),
-        "4": lambda: search_prompts(prompts),
-        "5": lambda: show_detail(prompts),
-        "6": lambda: toggle_favorite(prompts),
-        "7": lambda: show_prompts([prompt for prompt in prompts if prompt.favorite], "즐겨찾기 목록"),
+        "1": lambda: add_prompt(prompts), "2": lambda: show_list(prompts),
+        "3": lambda: show_by_category(prompts), "4": lambda: search_prompts(prompts),
+        "5": lambda: show_detail(prompts), "6": lambda: toggle_favorite(prompts),
+        "7": lambda: show_list([prompt for prompt in prompts if prompt["favorite"]], "즐겨찾기 목록"),
     }
     print("프롬포트 관리 프로그램을 시작합니다.")
     while True:
@@ -163,12 +151,12 @@ def run() -> None:
         choice = input("메뉴 번호: ").strip()
         if choice == "0":
             print("프로그램을 종료합니다. 이번 실행에서 추가한 데이터는 초기화됩니다.")
-            break
+            return
         action = actions.get(choice)
-        if action:
-            action()
+        if action is None:
+            print("잘못된 메뉴 번호입니다. 다시 선택해 주세요.")
         else:
-            print("올바른 메뉴 번호를 입력해 주세요.")
+            action()
 
 
 if __name__ == "__main__":
