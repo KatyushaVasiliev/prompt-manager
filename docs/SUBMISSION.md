@@ -48,10 +48,16 @@ py -3 prompt_manager.py
 다음 명령을 실행한다.
 
 ```powershell
-git log --oneline --graph --all
+git log --oneline --graph --all --decorate
 ```
 
 `feature/favorite-feedback` 브랜치가 `main`에 병합된 그래프와 기능 단위 커밋 10개 이상이 보이도록 캡처한다.
+
+`checkout`과 `merge` 명령 이력도 별도로 보이게 하려면 다음 명령 결과를 추가 캡처한다.
+
+```powershell
+git reflog --date=local
+```
 
 ## 최종 확인 명령
 
